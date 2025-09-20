@@ -1,0 +1,41 @@
+version: '3.9'
+services:
+  api:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      RUN_SCHEDULER: "false"
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - redis
+  worker:
+    build: .
+    command: ["python", "-m", "sticker_watcher.worker"]
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - redis
+  postgres:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: stickers
+      POSTGRES_USER: bot
+      POSTGRES_PASSWORD: bot
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+volumes:
+  pgdata:
